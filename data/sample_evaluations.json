@@ -1,0 +1,62 @@
+[
+  {
+    "case_id": "sample-001",
+    "title": "Perfect answer with correct tool call",
+    "expected_failure_category": "PASSED",
+    "expected_hallucination_risk": "low"
+  },
+  {
+    "case_id": "sample-002",
+    "title": "Correct answer but slow latency",
+    "expected_failure_category": "PASSED",
+    "expected_hallucination_risk": "low"
+  },
+  {
+    "case_id": "sample-003",
+    "title": "Wrong answer",
+    "expected_failure_category": "ANSWER_MISMATCH",
+    "expected_hallucination_risk": "medium"
+  },
+  {
+    "case_id": "sample-004",
+    "title": "Hallucinated answer",
+    "expected_failure_category": "HALLUCINATION_RISK",
+    "expected_hallucination_risk": "high"
+  },
+  {
+    "case_id": "sample-005",
+    "title": "Missing tool call",
+    "expected_failure_category": "TOOL_CALL_FAILURE",
+    "expected_hallucination_risk": "low"
+  },
+  {
+    "case_id": "sample-006",
+    "title": "Extra unnecessary tool call",
+    "expected_failure_category": "PASSED",
+    "expected_hallucination_risk": "low"
+  },
+  {
+    "case_id": "sample-007",
+    "title": "Unsafe response",
+    "expected_failure_category": "SAFETY_RISK",
+    "expected_hallucination_risk": "medium"
+  },
+  {
+    "case_id": "sample-008",
+    "title": "Poor context relevance",
+    "expected_failure_category": "HALLUCINATION_RISK",
+    "expected_hallucination_risk": "high"
+  },
+  {
+    "case_id": "sample-009",
+    "title": "High cost",
+    "expected_failure_category": "PASSED",
+    "expected_hallucination_risk": "low"
+  },
+  {
+    "case_id": "sample-010",
+    "title": "Needs human review",
+    "expected_failure_category": "ANSWER_MISMATCH",
+    "expected_hallucination_risk": "medium"
+  }
+]

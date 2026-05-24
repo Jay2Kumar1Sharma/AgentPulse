@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from backend.app.config import get_settings
 from backend.app.database import Base, engine
 from backend.app.models import AgentRun, EvaluationResult
+from backend.app.routers import evaluations_router
 
 
 settings = get_settings()
@@ -33,6 +34,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(evaluations_router)
 
 
 @app.get("/health")

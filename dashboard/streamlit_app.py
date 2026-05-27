@@ -255,7 +255,7 @@ def render_inspector(evaluations: list[dict[str, Any]]) -> None:
 
 
 st.title("AgentEval Dashboard")
-st.caption("Evaluation and monitoring platform for AI agent reliability.")
+st.caption("Demo dashboard for local AI agent evaluation and monitoring.")
 
 created_result = render_submission_form()
 if created_result is not None:

@@ -1,3 +1,4 @@
+import json
 import os
 from typing import Any
 
@@ -24,6 +25,12 @@ st.set_page_config(page_title="AgentEval Dashboard", page_icon="AE", layout="wid
 
 def fetch_json(path: str) -> Any:
     response = requests.get(f"{API_BASE_URL}{path}", timeout=10)
+    response.raise_for_status()
+    return response.json()
+
+
+def post_json(path: str, payload: dict[str, Any]) -> Any:
+    response = requests.post(f"{API_BASE_URL}{path}", json=payload, timeout=15)
     response.raise_for_status()
     return response.json()
 
@@ -75,7 +82,79 @@ def metric_breakdown_frame(evaluations: list[dict[str, Any]]) -> pd.DataFrame:
 def format_json(value: Any) -> str:
     if value in (None, "", [], {}):
         return "None"
-    return str(value)
+    return json.dumps(value, indent=2)
+
+
+def parse_json_input(raw_value: str, fallback: Any, expected_type: type) -> Any:
+    if not raw_value.strip():
+        return fallback
+    parsed = json.loads(raw_value)
+    if not isinstance(parsed, expected_type):
+        raise ValueError(f"Expected {expected_type.__name__} JSON.")
+    return parsed
+
+
+def parse_safety_flags(raw_value: str) -> list[str]:
+    return [flag.strip() for flag in raw_value.split(",") if flag.strip()]
+
+
+def render_submission_form() -> dict[str, Any] | None:
+    with st.expander("Add Evaluation", expanded=False):
+        with st.form("new_evaluation_form"):
+            text_columns = st.columns(2)
+            with text_columns[0]:
+                user_query = st.text_area("User query", height=90)
+                expected_answer = st.text_area("Expected answer", height=110)
+                actual_answer = st.text_area("Actual answer", height=110)
+            with text_columns[1]:
+                retrieved_context = st.text_area("Retrieved context", height=180)
+                expected_tool_calls_raw = st.text_area("Expected tool calls", value="[]", height=90)
+                actual_tool_calls_raw = st.text_area("Actual tool calls", value="[]", height=90)
+
+            numeric_columns = st.columns(3)
+            latency_ms = numeric_columns[0].number_input("Latency ms", min_value=0, value=1000, step=100)
+            cost_usd = numeric_columns[1].number_input("Cost USD", min_value=0.0, value=0.01, step=0.001, format="%.4f")
+            safety_flags_raw = numeric_columns[2].text_input("Safety flags")
+            metadata_raw = st.text_area("Metadata JSON", value="{}", height=80)
+
+            submitted = st.form_submit_button("Evaluate Run", type="primary")
+
+        if not submitted:
+            return None
+
+        try:
+            payload = {
+                "user_query": user_query,
+                "expected_answer": expected_answer,
+                "actual_answer": actual_answer,
+                "retrieved_context": retrieved_context,
+                "expected_tool_calls": parse_json_input(expected_tool_calls_raw, [], list),
+                "actual_tool_calls": parse_json_input(actual_tool_calls_raw, [], list),
+                "latency_ms": int(latency_ms),
+                "cost_usd": float(cost_usd),
+                "safety_flags": parse_safety_flags(safety_flags_raw),
+                "metadata_json": parse_json_input(metadata_raw, {}, dict),
+            }
+            result = post_json("/evaluations/run", payload)
+        except (json.JSONDecodeError, ValueError) as error:
+            st.error(f"Invalid form value: {error}")
+            return None
+        except requests.RequestException as error:
+            st.error(f"Evaluation request failed: {error}")
+            return None
+
+        load_dashboard_data.clear()
+        st.success(f"Evaluation {result['id']} created.")
+        return result
+
+
+def render_created_result(evaluation: dict[str, Any]) -> None:
+    result_columns = st.columns(4)
+    result_columns[0].metric("Overall score", f"{evaluation.get('overall_score', 0):.2f}")
+    result_columns[1].metric("Passed", "Yes" if evaluation.get("passed") else "No")
+    result_columns[2].metric("Failure category", evaluation.get("failure_category", ""))
+    result_columns[3].metric("Human review", "Yes" if evaluation.get("human_review_required") else "No")
+    st.write(evaluation.get("recommendation", ""))
 
 
 def render_summary(summary: dict[str, Any]) -> None:
@@ -158,6 +237,10 @@ def render_inspector(evaluations: list[dict[str, Any]]) -> None:
 
 st.title("AgentEval Dashboard")
 st.caption("Evaluation and monitoring platform for AI agent reliability.")
+
+created_result = render_submission_form()
+if created_result is not None:
+    render_created_result(created_result)
 
 try:
     summary_data, evaluation_data = load_dashboard_data()

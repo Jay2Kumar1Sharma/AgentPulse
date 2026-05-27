@@ -68,6 +68,7 @@ class EvaluationResultResponse(BaseModel):
     llm_judge_used: bool
     llm_judge_score: float | None = None
     llm_judge_summary: str | None = None
+    optional_llm_judge_result: dict[str, Any] | None = None
     created_at: datetime
     agent_run: AgentRunResponse | None = None
 

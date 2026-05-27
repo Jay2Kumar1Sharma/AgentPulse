@@ -5,7 +5,7 @@ from typing import Any
 
 from sqlalchemy import delete
 
-from backend.app.database import Base, SessionLocal, engine
+from backend.app.database import SessionLocal, initialize_database
 from backend.app.models import AgentRun, EvaluationResult
 from backend.app.schemas import EvaluationRequest
 from backend.app.services.evaluator import build_evaluation_summary, evaluate_agent_run
@@ -25,7 +25,7 @@ def load_json(path: Path) -> list[dict[str, Any]]:
 
 
 def seed_database(sample_runs_path: Path, reset: bool = False) -> dict[str, Any]:
-    Base.metadata.create_all(bind=engine)
+    initialize_database()
     sample_runs = load_json(sample_runs_path)
 
     with SessionLocal() as db:

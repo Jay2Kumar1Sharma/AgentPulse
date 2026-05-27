@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session, joinedload
 from backend.app.models.evaluation import AgentRun, EvaluationResult, to_json_text
 from backend.app.schemas.evaluation import EvaluationRequest
 from backend.app.services import metrics
+from backend.app.services.llm_judge import evaluate_with_llm_judge
 
 
 def evaluate_agent_run(payload: EvaluationRequest, db: Session) -> EvaluationResult:
@@ -25,6 +26,7 @@ def evaluate_agent_run(payload: EvaluationRequest, db: Session) -> EvaluationRes
     db.flush()
 
     metric_values = calculate_heuristic_metrics(payload)
+    llm_judge_result = evaluate_with_llm_judge(payload, metric_values)
     evaluation_result = EvaluationResult(
         agent_run=agent_run,
         exact_match_score=metric_values["exact_match_score"],
@@ -42,9 +44,10 @@ def evaluate_agent_run(payload: EvaluationRequest, db: Session) -> EvaluationRes
         passed=metric_values["passed"],
         failure_reason=metric_values["failure_reason"],
         recommendation=metric_values["recommendation"],
-        llm_judge_used=False,
-        llm_judge_score=None,
-        llm_judge_summary=None,
+        llm_judge_used=llm_judge_result.llm_judge_used,
+        llm_judge_score=llm_judge_result.judge_score,
+        llm_judge_summary=llm_judge_result.reasoning_summary,
+        llm_judge_result_json=to_json_text(llm_judge_result.to_dict()),
     )
     db.add(evaluation_result)
     db.commit()

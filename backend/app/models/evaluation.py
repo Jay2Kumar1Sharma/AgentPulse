@@ -69,6 +69,13 @@ class EvaluationResult(Base):
     llm_judge_used: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     llm_judge_score: Mapped[float | None] = mapped_column(Float, nullable=True)
     llm_judge_summary: Mapped[str | None] = mapped_column(Text, nullable=True)
+    llm_judge_result_json: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
 
     agent_run: Mapped[AgentRun] = relationship(back_populates="evaluation_result")
+
+    @property
+    def optional_llm_judge_result(self) -> dict[str, Any] | None:
+        if not self.llm_judge_result_json:
+            return None
+        return from_json_text(self.llm_judge_result_json, None)

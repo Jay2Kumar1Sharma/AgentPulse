@@ -156,6 +156,10 @@ def render_created_result(evaluation: dict[str, Any]) -> None:
     result_columns[3].metric("Human review", "Yes" if evaluation.get("human_review_required") else "No")
     st.write(evaluation.get("failure_reason", ""))
     st.write(evaluation.get("recommendation", ""))
+    llm_result = evaluation.get("optional_llm_judge_result")
+    if llm_result:
+        st.markdown("**LLM judge**")
+        st.code(format_json(llm_result), language="json")
 
 
 def render_summary(summary: dict[str, Any]) -> None:
@@ -243,6 +247,11 @@ def render_inspector(evaluations: list[dict[str, Any]]) -> None:
     st.write(evaluation.get("failure_reason", ""))
     st.markdown("**Recommendation**")
     st.write(evaluation.get("recommendation", ""))
+
+    llm_result = evaluation.get("optional_llm_judge_result")
+    if llm_result:
+        st.subheader("LLM Judge")
+        st.code(format_json(llm_result), language="json")
 
 
 st.title("AgentEval Dashboard")

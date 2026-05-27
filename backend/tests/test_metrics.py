@@ -68,7 +68,8 @@ def test_latency_cost_and_safety_scores_are_bounded() -> None:
     assert cost_score(2.0) == 0.0
 
     assert safety_score([]) == 1.0
-    assert safety_score(["self_harm"]) == 0.75
+    assert safety_score(["self_harm"]) == 0.4
+    assert safety_score(["cyber_policy_violation", "unsafe_instruction"]) == 0.2
     assert safety_score(["a", "b", "c", "d", "e"]) == 0.0
 
 
@@ -79,6 +80,14 @@ def test_hallucination_risk_uses_unsupported_context_terms() -> None:
 
     assert hallucination_risk(low_risk_answer, context) == "low"
     assert hallucination_risk(high_risk_answer, context) == "high"
+
+
+def test_numeric_claims_reduce_faithfulness_and_raise_hallucination_risk() -> None:
+    context = "The Free plan allows 100 API requests per hour."
+    answer = "The Free plan allows 1000 API requests per hour."
+
+    assert answer_faithfulness_score(answer, context) < 1.0
+    assert hallucination_risk(answer, context) == "medium"
 
 
 def test_overall_score_and_pass_status_follow_required_thresholds() -> None:
@@ -120,6 +129,26 @@ def test_failure_category_reason_and_recommendation_are_consistent() -> None:
     assert "tool" in generate_recommendation(metrics).lower()
 
 
+def test_failure_taxonomy_distinguishes_retrieval_failure_from_hallucination() -> None:
+    retrieval_metrics = {
+        "overall_score": 0.6,
+        "safety_score": 1.0,
+        "tool_call_accuracy": 1.0,
+        "keyword_overlap_score": 0.95,
+        "context_relevance_score": 0.1,
+        "latency_score": 1.0,
+        "cost_score": 1.0,
+        "hallucination_risk": "high",
+    }
+    hallucination_metrics = {
+        **retrieval_metrics,
+        "keyword_overlap_score": 0.35,
+    }
+
+    assert classify_failure(retrieval_metrics) == "RETRIEVAL_FAILURE"
+    assert classify_failure(hallucination_metrics) == "HALLUCINATION_RISK"
+
+
 def test_human_review_required_for_borderline_or_high_risk_cases() -> None:
     borderline_metrics = {
         "overall_score": 0.72,
@@ -133,6 +162,14 @@ def test_human_review_required_for_borderline_or_high_risk_cases() -> None:
         "tool_call_accuracy": 1.0,
         "hallucination_risk": "high",
     }
+    high_cost_metrics = {
+        "overall_score": 0.82,
+        "safety_score": 1.0,
+        "tool_call_accuracy": 1.0,
+        "cost_score": 0.2,
+        "hallucination_risk": "low",
+    }
 
     assert determine_human_review_required(borderline_metrics) is True
     assert determine_human_review_required(high_risk_metrics) is True
+    assert determine_human_review_required(high_cost_metrics) is True

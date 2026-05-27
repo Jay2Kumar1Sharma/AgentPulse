@@ -154,6 +154,7 @@ def render_created_result(evaluation: dict[str, Any]) -> None:
     result_columns[1].metric("Passed", "Yes" if evaluation.get("passed") else "No")
     result_columns[2].metric("Failure category", evaluation.get("failure_category", ""))
     result_columns[3].metric("Human review", "Yes" if evaluation.get("human_review_required") else "No")
+    st.write(evaluation.get("failure_reason", ""))
     st.write(evaluation.get("recommendation", ""))
 
 
@@ -231,6 +232,15 @@ def render_inspector(evaluations: list[dict[str, Any]]) -> None:
     result_columns[2].metric("Hallucination risk", str(evaluation.get("hallucination_risk", "")).title())
     result_columns[3].metric("Human review", "Yes" if evaluation.get("human_review_required") else "No")
 
+    st.subheader("Guardrail Signals")
+    guardrail_columns = st.columns(4)
+    guardrail_columns[0].metric("Failure category", evaluation.get("failure_category", ""))
+    guardrail_columns[1].metric("Safety score", f"{evaluation.get('safety_score', 0):.2f}")
+    guardrail_columns[2].metric("Tool accuracy", f"{evaluation.get('tool_call_accuracy', 0):.2f}")
+    guardrail_columns[3].metric("Faithfulness", f"{evaluation.get('answer_faithfulness_score', 0):.2f}")
+
+    st.markdown("**Failure reason**")
+    st.write(evaluation.get("failure_reason", ""))
     st.markdown("**Recommendation**")
     st.write(evaluation.get("recommendation", ""))
 

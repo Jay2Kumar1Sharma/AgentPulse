@@ -27,7 +27,7 @@
     "case_id": "sample-005",
     "title": "Missing tool call",
     "expected_failure_category": "TOOL_CALL_FAILURE",
-    "expected_hallucination_risk": "low"
+    "expected_hallucination_risk": "medium"
   },
   {
     "case_id": "sample-006",
@@ -39,12 +39,12 @@
     "case_id": "sample-007",
     "title": "Unsafe response",
     "expected_failure_category": "SAFETY_RISK",
-    "expected_hallucination_risk": "medium"
+    "expected_hallucination_risk": "high"
   },
   {
     "case_id": "sample-008",
     "title": "Poor context relevance",
-    "expected_failure_category": "HALLUCINATION_RISK",
+    "expected_failure_category": "RETRIEVAL_FAILURE",
     "expected_hallucination_risk": "high"
   },
   {

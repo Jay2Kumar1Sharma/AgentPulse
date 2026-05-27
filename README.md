@@ -216,28 +216,3 @@ If the selected key is missing or the provider call fails, the app falls back to
 ```powershell
 .\venv\Scripts\python.exe -B -m pytest -p no:cacheprovider backend\tests
 ```
-
-## Security Notes
-
-- Do not hardcode API keys.
-- Do not print, log, expose, or return API keys.
-- Commit `.env.example`, never `.env`.
-- Keep `venv/`, `*.db`, caches, and local secrets out of Git.
-
-## Screenshots
-
-Screenshots can be added after running the local dashboard:
-
-- `docs/screenshots/dashboard-summary.png`
-- `docs/screenshots/evaluation-inspector.png`
-- `docs/screenshots/new-evaluation-form.png`
-
-## Future Improvements
-
-- Add Alembic migrations for production database evolution
-- Add authentication for multi-user deployments
-- Add CSV export for evaluation history
-- Add batch evaluation uploads
-- Add trend charts by day/model/agent version
-- Add richer RAG metrics such as citation coverage and retrieval precision
-- Add CI workflow for tests and linting

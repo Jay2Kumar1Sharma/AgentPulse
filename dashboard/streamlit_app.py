@@ -99,7 +99,7 @@ def parse_safety_flags(raw_value: str) -> list[str]:
 
 
 def render_submission_form() -> dict[str, Any] | None:
-    with st.expander("Add Evaluation", expanded=False):
+    with st.expander("Add Evaluation", expanded=True):
         with st.form("new_evaluation_form"):
             text_columns = st.columns(2)
             with text_columns[0]:
@@ -254,12 +254,13 @@ def render_inspector(evaluations: list[dict[str, Any]]) -> None:
         st.code(format_json(llm_result), language="json")
 
 
-st.title("AgentEval Dashboard")
-st.caption("Demo dashboard for local AI agent evaluation and monitoring.")
-
 created_result = render_submission_form()
 if created_result is not None:
     render_created_result(created_result)
+
+st.divider()
+st.title("AgentEval Demo Dashboard")
+st.caption("Local AI agent evaluation and monitoring.")
 
 try:
     summary_data, evaluation_data = load_dashboard_data()

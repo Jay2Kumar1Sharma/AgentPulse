@@ -191,6 +191,10 @@ The evaluator computes:
 
 See [docs/evaluation_metrics.md](docs/evaluation_metrics.md) for formulas, pass criteria, limitations, and LLM judge behavior.
 
+## Demo Checklist
+
+See [docs/demo.md](docs/demo.md) for a short local demo flow and screenshot checklist.
+
 ## Optional LLM Judge
 
 By default:

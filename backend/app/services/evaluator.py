@@ -10,51 +10,55 @@ from backend.app.services.llm_judge import evaluate_with_llm_judge
 
 
 def evaluate_agent_run(payload: EvaluationRequest, db: Session) -> EvaluationResult:
-    agent_run = AgentRun(
-        user_query=payload.user_query,
-        expected_answer=payload.expected_answer,
-        actual_answer=payload.actual_answer,
-        retrieved_context=payload.retrieved_context,
-        expected_tool_calls=to_json_text(payload.expected_tool_calls),
-        actual_tool_calls=to_json_text(payload.actual_tool_calls),
-        latency_ms=payload.latency_ms,
-        cost_usd=payload.cost_usd,
-        safety_flags=to_json_text(payload.safety_flags),
-        metadata_json=to_json_text(payload.metadata_json),
-    )
-    db.add(agent_run)
-    db.flush()
+    try:
+        agent_run = AgentRun(
+            user_query=payload.user_query,
+            expected_answer=payload.expected_answer,
+            actual_answer=payload.actual_answer,
+            retrieved_context=payload.retrieved_context,
+            expected_tool_calls=to_json_text(payload.expected_tool_calls),
+            actual_tool_calls=to_json_text(payload.actual_tool_calls),
+            latency_ms=payload.latency_ms,
+            cost_usd=payload.cost_usd,
+            safety_flags=to_json_text(payload.safety_flags),
+            metadata_json=to_json_text(payload.metadata_json),
+        )
+        db.add(agent_run)
+        db.flush()
 
-    metric_values = calculate_heuristic_metrics(payload)
-    llm_judge_result = evaluate_with_llm_judge(payload, metric_values)
-    evaluation_result = EvaluationResult(
-        agent_run=agent_run,
-        exact_match_score=metric_values["exact_match_score"],
-        keyword_overlap_score=metric_values["keyword_overlap_score"],
-        context_relevance_score=metric_values["context_relevance_score"],
-        answer_faithfulness_score=metric_values["answer_faithfulness_score"],
-        tool_call_accuracy=metric_values["tool_call_accuracy"],
-        latency_score=metric_values["latency_score"],
-        cost_score=metric_values["cost_score"],
-        safety_score=metric_values["safety_score"],
-        hallucination_risk=metric_values["hallucination_risk"],
-        human_review_required=metric_values["human_review_required"],
-        failure_category=metric_values["failure_category"],
-        overall_score=metric_values["overall_score"],
-        passed=metric_values["passed"],
-        failure_reason=metric_values["failure_reason"],
-        recommendation=metric_values["recommendation"],
-        llm_judge_used=llm_judge_result.llm_judge_used,
-        llm_judge_score=llm_judge_result.judge_score,
-        llm_judge_summary=llm_judge_result.reasoning_summary,
-        llm_judge_result_json=to_json_text(llm_judge_result.to_dict()),
-    )
-    db.add(evaluation_result)
-    db.commit()
-    db.refresh(agent_run)
-    db.refresh(evaluation_result)
-    evaluation_result.agent_run = agent_run
-    return evaluation_result
+        metric_values = calculate_heuristic_metrics(payload)
+        llm_judge_result = evaluate_with_llm_judge(payload, metric_values)
+        evaluation_result = EvaluationResult(
+            agent_run=agent_run,
+            exact_match_score=metric_values["exact_match_score"],
+            keyword_overlap_score=metric_values["keyword_overlap_score"],
+            context_relevance_score=metric_values["context_relevance_score"],
+            answer_faithfulness_score=metric_values["answer_faithfulness_score"],
+            tool_call_accuracy=metric_values["tool_call_accuracy"],
+            latency_score=metric_values["latency_score"],
+            cost_score=metric_values["cost_score"],
+            safety_score=metric_values["safety_score"],
+            hallucination_risk=metric_values["hallucination_risk"],
+            human_review_required=metric_values["human_review_required"],
+            failure_category=metric_values["failure_category"],
+            overall_score=metric_values["overall_score"],
+            passed=metric_values["passed"],
+            failure_reason=metric_values["failure_reason"],
+            recommendation=metric_values["recommendation"],
+            llm_judge_used=llm_judge_result.llm_judge_used,
+            llm_judge_score=llm_judge_result.judge_score,
+            llm_judge_summary=llm_judge_result.reasoning_summary,
+            llm_judge_result_json=to_json_text(llm_judge_result.to_dict()),
+        )
+        db.add(evaluation_result)
+        db.commit()
+        db.refresh(agent_run)
+        db.refresh(evaluation_result)
+        evaluation_result.agent_run = agent_run
+        return evaluation_result
+    except Exception:
+        db.rollback()
+        raise
 
 
 def calculate_heuristic_metrics(payload: EvaluationRequest) -> dict[str, float | str | bool]:
